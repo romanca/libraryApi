@@ -1,67 +1,48 @@
-const express = require("express");
+import express from "express";
 const app = express();
-const Joi = require("joi");
+import Joi from "joi";
+import { library } from "./data.mjs";
 
-const library = [
-  {
-    title: "Robinson Crusoe",
-    author: "Daniel Defoe",
-    pages: 300,
-    tags: ["adventure", "history"],
-    id: 0,
-  },
-  {
-    title: "The Unbearable Lightness of Being",
-    author: "Milan Kundera",
-    pages: 250,
-    tags: ["philosophical", "novel"],
-    id: 1,
-  },
-  {
-    title: "Nausea",
-    author: "Jean-Paul Sartre",
-    pages: 120,
-    tags: ["philosophical", "existentialism", "novel"],
-    id: 2,
-  },
-];
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-function validateBook(book) {
-  const schema = {
-    title: Joi.string().required(),
-    author: Joi.string().required(),
-    pages: Joi.number().required(),
-    tags: joi.array().items(joi.string()),
-  };
-  return Joi.validate(book, schema);
-}
+const schema = Joi.object({
+  title: Joi.string().required(),
+  author: Joi.string().required(),
+  pages: Joi.number().optional(),
+  tags: Joi.array().items(Joi.string()).optional(),
+});
 
 app.get("/book", (req, res) => {
-  res.status(200).send(["successfull operation", library]);
+  res.status(200).send(library);
 });
 
 app.get("/book/tags", (req, res) => {
-  const tags = library.map((element) => element.tags);
-  if (!tags) {
+  const tagsArray = [];
+  library.map((i) => i.tags.map((t) => tagsArray.push(t)));
+
+  if (!tagsArray) {
     return res.status(404).send("The are no tags...!!!");
   } else {
-    return res.status(200).send(["successfull operation", tags]);
+    return res.status(200).send(tagsArray);
   }
 });
 
 app.get("/book/:id", (req, res) => {
-  const id = parseInt(req.params.id);
-  const book = library.find((item) => item.id === id);
-  if (!book) {
+  const parsedId = parseInt(req.params.id);
+  const book = library.find((item) => item.id === parsedId);
+
+  if (isNaN(parsedId)) {
+    return res.status(400).send("Invalid ID format supplied");
+  } else if (!book) {
     return res.status(404).send("Book not found");
-  } else if (book) {
-    res.status(200).send(["successful operation", book]);
+  } else {
+    return res.status(200).send(book);
   }
 });
 
 app.post("/book", (req, res) => {
-  const { error } = validateBook(req.body);
-  if (error) return res.status(400).send(error.details.message);
+  const result = schema.validate(req.body);
   const newBook = {
     id: Date.now(),
     title: req.body.title,
@@ -70,33 +51,47 @@ app.post("/book", (req, res) => {
     tags: req.body.tags,
   };
   library.push(newBook);
-  res.send(newBook);
+
+  if (result.error) {
+    return res.status(405).send("New book was not validated");
+  } else {
+    return res.status(200).send(newBook);
+  }
 });
 
 app.put("/book/:id", (req, res) => {
-  const book = library.find((item) => item.id === parseInt(req.params.id));
-  const { error } = validateBook(req.body);
-  if (error) return res.status(400).send(error.details.message);
+  const parsedId = parseInt(req.params.id);
+  const book = library.find((item) => item.id === parsedId);
+  const result = schema.validate(req.body);
 
   book.title = req.body.title;
   book.author = req.body.author;
   book.pages = req.body.pages;
   book.tags = req.body.tags;
-  res.send(book);
+
+  if (isNaN(parsedId)) {
+    return res.status(400).send("Invalid ID format supplied");
+  } else if (result.error) {
+    return res.status(405).send("New book was not validated");
+  } else {
+    return res.status(200).send(book);
+  }
 });
 
 app.delete("/book/:id", (req, res) => {
-  const book = library.find((item) => item.id === parseInt(req.params.id));
-  if (!book) {
-    return res.status(404).send("The book with this id does not exist...!!!");
-  }
+  const parsedId = parseInt(req.params.id);
+  const book = library.find((item) => item.id === parsedId);
   const index = library.indexOf(book);
   library.splice(index, 1);
-  res.status(200).send("successfull operation", book);
-});
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+  if (isNaN(parsedId)) {
+    return res.status(400).send("Invalid ID format supplied");
+  } else if (!book) {
+    return res.status(404).send("The book with this id does not exist...!!!");
+  } else {
+    return res.status(200).send(book);
+  }
+});
 
 app.listen(3002, () => {
   console.log("server is running on port 3002");
