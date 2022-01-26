@@ -1,47 +1,38 @@
 import express from "express";
 const app = express();
-import Joi from "joi";
-import { library } from "./data.mjs";
+import { library } from "./app_modules/data.mjs";
+import {
+  editBook,
+  getBookById,
+  getLibrary,
+  getLibraryTags,
+  postBook,
+} from "./app_modules/responses.mjs";
+import { schema } from "./app_modules/schema.mjs";
+import { bookID, bookTagsUrl, bookUrl } from "./app_modules/urls.mjs";
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-const schema = Joi.object({
-  title: Joi.string().required(),
-  author: Joi.string().required(),
-  pages: Joi.number().optional(),
-  tags: Joi.array().items(Joi.string()).optional(),
+app.get(bookUrl, (req, res) => {
+  getLibrary(res, library);
 });
 
-app.get("/book", (req, res) => {
-  res.status(200).send(library);
-});
-
-app.get("/book/tags", (req, res) => {
+app.get(bookTagsUrl, (req, res) => {
   const tagsArray = [];
   library.map((i) => i.tags.map((t) => tagsArray.push(t)));
 
-  if (!tagsArray) {
-    return res.status(404).send("The are no tags...!!!");
-  } else {
-    return res.status(200).send(tagsArray);
-  }
+  getLibraryTags(res, tagsArray);
 });
 
-app.get("/book/:id", (req, res) => {
+app.get(bookID, (req, res) => {
   const parsedId = parseInt(req.params.id);
   const book = library.find((item) => item.id === parsedId);
 
-  if (isNaN(parsedId)) {
-    return res.status(400).send("Invalid ID format supplied");
-  } else if (!book) {
-    return res.status(404).send("Book not found");
-  } else {
-    return res.status(200).send(book);
-  }
+  getBookById(parsedId, book, res);
 });
 
-app.post("/book", (req, res) => {
+app.post(bookUrl, (req, res) => {
   const result = schema.validate(req.body);
   const newBook = {
     id: Date.now(),
@@ -52,14 +43,10 @@ app.post("/book", (req, res) => {
   };
   library.push(newBook);
 
-  if (result.error) {
-    return res.status(405).send("New book was not validated");
-  } else {
-    return res.status(200).send(newBook);
-  }
+  postBook(result, newBook, res);
 });
 
-app.put("/book/:id", (req, res) => {
+app.put(bookID, (req, res) => {
   const parsedId = parseInt(req.params.id);
   const book = library.find((item) => item.id === parsedId);
   const result = schema.validate(req.body);
@@ -69,28 +56,16 @@ app.put("/book/:id", (req, res) => {
   book.pages = req.body.pages;
   book.tags = req.body.tags;
 
-  if (isNaN(parsedId)) {
-    return res.status(400).send("Invalid ID format supplied");
-  } else if (result.error) {
-    return res.status(405).send("New book was not validated");
-  } else {
-    return res.status(200).send(book);
-  }
+  editBook(parsedId, book, result, res);
 });
 
-app.delete("/book/:id", (req, res) => {
+app.delete(bookID, (req, res) => {
   const parsedId = parseInt(req.params.id);
   const book = library.find((item) => item.id === parsedId);
   const index = library.indexOf(book);
   library.splice(index, 1);
 
-  if (isNaN(parsedId)) {
-    return res.status(400).send("Invalid ID format supplied");
-  } else if (!book) {
-    return res.status(404).send("The book with this id does not exist...!!!");
-  } else {
-    return res.status(200).send(book);
-  }
+  getBookById(parsedId, book, res);
 });
 
 app.listen(3002, () => {
