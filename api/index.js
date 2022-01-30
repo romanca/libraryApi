@@ -11,22 +11,21 @@ import {
   deleteBook,
 } from "./app_modules/responses.mjs";
 import { bookID, bookTagsUrl, bookUrl } from "./app_modules/urls.mjs";
+const router = express.Router();
 
 app.use(cors());
 app.use(bodyParser.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.get(bookUrl, getLibrary);
+router
+  .get(bookUrl, getLibrary)
+  .get(bookTagsUrl, getLibraryTags)
+  .get(bookID, getBookById)
+  .post(bookUrl, postBook)
+  .put(bookID, editBook)
+  .delete(bookID, deleteBook);
 
-app.get(bookTagsUrl, getLibraryTags);
-
-app.get(bookID, getBookById);
-
-app.post(bookUrl, postBook);
-
-app.put(bookID, editBook);
-
-app.delete(bookID, deleteBook);
+app.use(router);
 
 app.listen(3002, () => {
   console.log("server is running on port 3002");
