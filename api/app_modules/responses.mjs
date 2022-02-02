@@ -1,24 +1,44 @@
-import { library } from "./data.mjs";
+import Books from "../models/books.mjs";
+import sequelize from "../models/index.mjs";
+import Tags from "../models/tags.mjs";
 import { schema } from "./schema.mjs";
 
-export function getLibrary(req, res) {
-  return res.status(200).send(library);
-}
+sequelize.sync({ force: true }).then(() => console.log("db is ready"));
 
-export function getLibraryTags(req, res) {
-  const tagsArray = [];
-  library.map((i) => i.tags.map((t) => tagsArray.push(t)));
+export const getLibrary = async (req, res) => {
+  const books = await Books.findAll();
+  res.send(books);
+};
 
-  if (!tagsArray) {
-    return res.status(404).send("The are no tags...!!!");
-  } else {
-    return res.status(200).send(tagsArray);
-  }
-}
+export const getLibraryTags = async (req, res) => {
+  const { name, id } = req.body;
+  // const parsedId = parseInt(req.params.id);
+  const book = await Books.findByPk({ where: { id: id } });
+  console.log(book);
+  const tag = await Tags.create({ name, bookId: book.id });
+  res.send(tag);
+  // const tagsArray = [];
+  // library.map((i) => i.tags.map((t) => tagsArray.push(t)));
+  // if (!tagsArray) {
+  //   return res.status(404).send("The are no tags...!!!");
+  // } else {
+  //   return res.status(200).send(tagsArray);
+  // }
+};
+// export function getLibraryTags(req, res) {
+//   const tagsArray = [];
+//   library.map((i) => i.tags.map((t) => tagsArray.push(t)));
 
-export function getBookById(req, res) {
+//   if (!tagsArray) {
+//     return res.status(404).send("The are no tags...!!!");
+//   } else {
+//     return res.status(200).send(tagsArray);
+//   }
+// }
+
+export const getBookById = async (req, res) => {
   const parsedId = parseInt(req.params.id);
-  const book = library.find((item) => item.id === parsedId);
+  const book = await Books.findOne({ where: { id: parsedId } });
 
   if (isNaN(parsedId)) {
     return res.status(400).send("Invalid ID format supplied");
@@ -27,29 +47,28 @@ export function getBookById(req, res) {
   } else {
     return res.status(200).send(book);
   }
-}
+};
 
-export function postBook(req, res) {
+export const postBook = async (req, res) => {
   const result = schema.validate(req.body);
   const newBook = {
-    id: Date.now(),
     title: req.body.title,
     author: req.body.author,
     pages: req.body.pages,
     tags: req.body.tags,
   };
-  library.push(newBook);
+  await Books.create(newBook);
 
   if (result.error) {
     return res.status(405).send("New book was not validated");
   } else {
-    return res.status(200).send(newBook);
+    return res.status(200).send("Book created");
   }
-}
+};
 
-export function editBook(req, res) {
+export const editBook = async (req, res) => {
   const parsedId = parseInt(req.params.id);
-  const book = library.find((item) => item.id === parsedId);
+  const book = await Books.findOne({ where: { id: parsedId } });
   const result = schema.validate(req.body);
 
   book.title = req.body.title;
@@ -57,26 +76,26 @@ export function editBook(req, res) {
   book.pages = req.body.pages;
   book.tags = req.body.tags;
 
+  await book.save();
+
   if (isNaN(parsedId)) {
     return res.status(400).send("Invalid ID format supplied");
   } else if (result.error) {
     return res.status(405).send("New book was not validated");
   } else {
-    return res.status(200).send(book);
+    return res.status(200).send("Successfully updated");
   }
-}
+};
 
-export function deleteBook(req, res) {
+export const deleteBook = async (req, res) => {
   const parsedId = parseInt(req.params.id);
-  const book = library.find((item) => item.id === parsedId);
-  const index = library.indexOf(book);
-  library.slice(index, 1);
+  await Books.destroy({ where: { id: parsedId } });
 
   if (isNaN(parsedId)) {
     return res.status(400).send("Invalid ID format supplied");
-  } else if (!book) {
+  } else if (!parsedId) {
     return res.status(404).send("Book not found");
   } else {
-    return res.status(200).send(book);
+    return res.status(200).send("Successfully removed");
   }
-}
+};

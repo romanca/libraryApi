@@ -19,11 +19,12 @@ app.use(express.urlencoded({ extended: true }));
 
 router
   .get(bookUrl, getLibrary)
-  .get(bookTagsUrl, getLibraryTags)
   .get(bookID, getBookById)
   .post(bookUrl, postBook)
   .put(bookID, editBook)
   .delete(bookID, deleteBook);
+// .post(bookTagsUrl, getLibraryTags);
+// .get(bookTagsUrl, getLibraryTags);
 
 app.use(router);
 
