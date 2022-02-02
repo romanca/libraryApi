@@ -1,11 +1,7 @@
 import { Model, DataTypes } from "sequelize";
 import sequelize from "./index.mjs";
 
-class Tags extends Model {
-  //   static associate({ Books }) {
-  //     this.belongsTo(Books, { foreignKey: "bookId" });
-  //   }
-}
+class Tags extends Model {}
 
 Tags.init(
   {

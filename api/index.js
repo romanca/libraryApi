@@ -22,9 +22,8 @@ router
   .get(bookID, getBookById)
   .post(bookUrl, postBook)
   .put(bookID, editBook)
-  .delete(bookID, deleteBook);
-// .post(bookTagsUrl, getLibraryTags);
-// .get(bookTagsUrl, getLibraryTags);
+  .delete(bookID, deleteBook)
+  .get(bookTagsUrl, getLibraryTags);
 
 app.use(router);
 

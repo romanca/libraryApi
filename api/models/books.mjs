@@ -1,12 +1,7 @@
 import { Model, DataTypes } from "sequelize";
 import sequelize from "./index.mjs";
-import Tags from "./tags.mjs";
 
-class Books extends Model {
-  // static associate({ Tags }) {
-  //   this.belongsTo(Tags, { foreignKey: "bookId" });
-  // }
-}
+class Books extends Model {}
 Books.init(
   {
     id: {
@@ -25,7 +20,5 @@ Books.init(
     timestamps: false,
   }
 );
-
-// Books.hasMany(Tags);
 
 export default Books;

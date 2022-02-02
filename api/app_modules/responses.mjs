@@ -1,6 +1,5 @@
 import Books from "../models/books.mjs";
 import sequelize from "../models/index.mjs";
-import Tags from "../models/tags.mjs";
 import { schema } from "./schema.mjs";
 
 sequelize.sync({ force: true }).then(() => console.log("db is ready"));
@@ -10,31 +9,16 @@ export const getLibrary = async (req, res) => {
   res.send(books);
 };
 
-export const getLibraryTags = async (req, res) => {
-  const { name, id } = req.body;
-  // const parsedId = parseInt(req.params.id);
-  const book = await Books.findByPk({ where: { id: id } });
-  console.log(book);
-  const tag = await Tags.create({ name, bookId: book.id });
-  res.send(tag);
-  // const tagsArray = [];
-  // library.map((i) => i.tags.map((t) => tagsArray.push(t)));
-  // if (!tagsArray) {
-  //   return res.status(404).send("The are no tags...!!!");
-  // } else {
-  //   return res.status(200).send(tagsArray);
-  // }
-};
-// export function getLibraryTags(req, res) {
-//   const tagsArray = [];
-//   library.map((i) => i.tags.map((t) => tagsArray.push(t)));
+export function getLibraryTags(req, res) {
+  const tagsArray = [];
+  library.map((i) => i.tags.map((t) => tagsArray.push(t)));
 
-//   if (!tagsArray) {
-//     return res.status(404).send("The are no tags...!!!");
-//   } else {
-//     return res.status(200).send(tagsArray);
-//   }
-// }
+  if (!tagsArray) {
+    return res.status(404).send("The are no tags...!!!");
+  } else {
+    return res.status(200).send(tagsArray);
+  }
+}
 
 export const getBookById = async (req, res) => {
   const parsedId = parseInt(req.params.id);
