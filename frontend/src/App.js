@@ -4,9 +4,9 @@ import "./App.css";
 const App = () => {
   const [data, setData] = React.useState([]);
   const [tags, setTags] = React.useState([]);
-  const url = "http://localhost:3002/book";
-  const tagsUrl = "http://localhost:3002/book/tags";
-  const itemUrl = "http://localhost:3002/book/:id";
+  const url = "http://localhost:4000/book";
+  const tagsUrl = "http://localhost:4000/book/tags";
+  const itemUrl = "http://localhost:4000/book/:id";
 
   const fetchData = React.useCallback(async () => {
     const response = await fetch(url);
@@ -25,14 +25,6 @@ const App = () => {
     fetchTags();
   }, [fetchTags, fetchData]);
 
-  const handleSubmit = () => {};
-
-  const handleRemove = async (id) => {
-    const response = await fetch(itemUrl);
-    const data = await response.json();
-    setData(data.filter((i) => i.id !== id));
-  };
-
   return (
     <div className="App">
       <div className="submit-form">
@@ -47,7 +39,6 @@ const App = () => {
             <div>{i.title}</div>
             <div>{i.author}</div>
             <div>{i.pages}</div>
-            <button onClick={() => handleRemove(i.id)}>x</button>
           </div>
         ))}
       </div>
@@ -56,7 +47,7 @@ const App = () => {
         <div>
           {tags.map((i, index) => (
             <div key={index} className="item">
-              <div>{i}</div>
+              <div>{i.name}</div>
             </div>
           ))}
         </div>
