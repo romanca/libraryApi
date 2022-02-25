@@ -50,6 +50,7 @@ export const deleteBook = async (req, res) => {
 
     if (book) {
       await book.destroy();
+
       res.send(book);
     } else res.status(404).send("Book not found");
   } else {
